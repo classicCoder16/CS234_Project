@@ -259,6 +259,7 @@ class QN(object):
             
         # occasionaly save the weights
         if (t % self.config.saving_freq == 0):
+            print 'Saving weights'
             self.save()
 
         return loss_eval, grad_eval

@@ -18,7 +18,7 @@ class config():
     num_episodes_test = 50
     grad_clip         = True
     clip_val          = 10
-    saving_freq       = 250000
+    saving_freq       = 10000
     log_freq          = 50
     eval_freq         = 250000
     record_freq       = 250000
@@ -48,4 +48,4 @@ class config():
 
 
     restore = True
-    restore_path = "results/q5_train_atari_nature/"
+    restore_path = "results/q5_train_atari_nature/model.weights"
