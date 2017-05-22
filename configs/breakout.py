@@ -40,3 +40,8 @@ class config():
     eps_end            = 0.1
     eps_nsteps         = 1000000
     learning_start     = 50000
+
+    # Init values for plots
+    avg_reward = 0.0
+    max_reward = 0.0
+    eval_reward = 0.0
