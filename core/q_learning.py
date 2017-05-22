@@ -9,8 +9,8 @@ from collections import deque
 
 from utils.general import get_logger, Progbar, export_plot
 from utils.replay_buffer import ReplayBuffer
-from utils.preprocess import greyscale
-from utils.wrappers import PreproWrapper, MaxAndSkipEnv
+from utils.preprocess import greyscale, process_state
+from utils.wrappers import PreproWrapper, MaxAndSkipEnv, ClippedRewardsWrapper, NoopResetEnv
 
 
 class QN(object):
@@ -292,7 +292,6 @@ class QN(object):
                 # store last state in buffer
                 idx     = replay_buffer.store_frame(state)
                 q_input = replay_buffer.encode_recent_observation()
-
                 action = self.get_action(q_input)
 
                 # perform action in env
@@ -327,8 +326,10 @@ class QN(object):
         env = gym.make(self.config.env_name)
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
         env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
-        env = PreproWrapper(env, prepro=greyscale, shape=(80, 80, 1), 
-                        overwrite_render=self.config.overwrite_render)
+        env = ClippedRewardsWrapper(env)
+        env = NoopResetEnv(env)
+        env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
+                            overwrite_render=self.config.overwrite_render)
         self.evaluate(env, 1)
 
 

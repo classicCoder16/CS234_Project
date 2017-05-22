@@ -27,10 +27,10 @@ if __name__ == '__main__':
     # make env
     env = gym.make(config.env_name)
     env = MaxAndSkipEnv(env, skip=config.skip_frame)
-    env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
-                        overwrite_render=config.overwrite_render)
     env = ClippedRewardsWrapper(env)
     env = NoopResetEnv(env)
+    env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
+                        overwrite_render=config.overwrite_render)
 
     # exploration strategy
     exp_schedule = LinearExploration(env, config.eps_begin, 
@@ -41,5 +41,5 @@ if __name__ == '__main__':
             config.lr_nsteps)
 
     # train model
-    # model = NatureQN(env, config)
-    # model.run(exp_schedule, lr_schedule)
+    model = NatureQN(env, config)
+    model.run(exp_schedule, lr_schedule)

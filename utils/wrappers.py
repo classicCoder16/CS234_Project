@@ -59,6 +59,7 @@ class PreproWrapper(gym.Wrapper):
         self.viewer = None
         self.prepro = prepro
         self.observation_space = spaces.Box(low=0, high=high, shape=shape)
+        print 'Observation Space is', self.observation_space
         self.high = high
 
 
