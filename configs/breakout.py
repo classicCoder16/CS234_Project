@@ -45,3 +45,7 @@ class config():
     avg_reward = 0.0
     max_reward = 0.0
     eval_reward = 0.0
+
+
+    restore = True
+    restore_path = "results/q5_train_atari_nature/"

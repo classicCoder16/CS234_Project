@@ -56,10 +56,10 @@ class Linear(DQN):
         ################YOUR CODE HERE (6-15 lines) ##################
 
         img_height, img_width, nchannels = state_shape
-        self.s = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
+        self.s = tf.placeholder(tf.uint8, shape=(None, None, None, nchannels*self.config.state_history))
         self.a = tf.placeholder(tf.int32, shape=(None))
         self.r = tf.placeholder(tf.float32, shape=(None))
-        self.sp = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
+        self.sp = tf.placeholder(tf.uint8, shape=(None, None, None, nchannels*self.config.state_history))
         self.done_mask = tf.placeholder(tf.bool, shape=(None))
         self.lr = tf.placeholder(tf.float32)
 

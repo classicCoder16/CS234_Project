@@ -106,11 +106,19 @@ class DQN(QN):
         init = tf.global_variables_initializer()
         self.sess.run(init)
 
-        # synchronise q and target_q networks
-        self.sess.run(self.update_target_op)
-
         # for saving networks weights
         self.saver = tf.train.Saver()
+
+        if self.config.restore:
+            ckpt = tf.train.get_checkpoint_state(self.config.restore_path)
+            if ckpt and ckpt.model_checkpoint_path:
+                print 'Restoring from ' + ckpt.model_checkpoint_path
+                saver.restore(sess, ckpt.model_checkpoint_path)
+            else:
+                print 'Path not found'
+
+        # synchronise q and target_q networks
+        self.sess.run(self.update_target_op)
 
        
     def add_summary(self):
