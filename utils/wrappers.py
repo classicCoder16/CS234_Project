@@ -98,3 +98,27 @@ class PreproWrapper(gym.Wrapper):
 
         else:
             super(PongWrapper, self)._render(mode, close)
+
+
+class ClippedRewardsWrapper(gym.Wrapper):
+    def _step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        return obs, np.sign(reward), done, info
+
+
+class NoopResetEnv(gym.Wrapper):
+    def __init__(self, env=None, noop_max=30):
+        """Sample initial states by taking random number of no-ops on reset.
+        No-op is assumed to be action 0.
+        """
+        super(NoopResetEnv, self).__init__(env)
+        self.noop_max = noop_max
+        assert env.unwrapped.get_action_meanings()[0] == 'NOOP'
+
+    def _reset(self):
+        """ Do no-op action for a number of steps in [1, noop_max]."""
+        self.env.reset()
+        noops = np.random.randint(1, self.noop_max + 1)
+        for _ in range(noops):
+            obs, _, _, _ = self.env.step(0)
+        return obs
