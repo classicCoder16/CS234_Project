@@ -56,6 +56,7 @@ class Linear(DQN):
         ################YOUR CODE HERE (6-15 lines) ##################
 
         img_height, img_width, nchannels = state_shape
+        print 'State shape is', state_shape
         self.s = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
         self.a = tf.placeholder(tf.int32, shape=(None))
         self.r = tf.placeholder(tf.float32, shape=(None))
