@@ -31,6 +31,7 @@ class NatureQN(Linear):
         """
         # this information might be useful
         num_actions = self.env.action_space.n
+        print num_actions
         out = state
         ##############################################################
         """

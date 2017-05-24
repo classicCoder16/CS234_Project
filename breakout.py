@@ -28,10 +28,10 @@ if __name__ == '__main__':
     env = gym.make(config.env_name)
     env = EpisodicLifeEnv(env)
     env = NoopResetEnv(env)
-    env = MaxAndSkipEnv(env, skip=config.skip_frame)
+#    env = MaxAndSkipEnv(env, skip=config.skip_frame)
     env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
                         overwrite_render=config.overwrite_render)
-    env = ClippedRewardsWrapper(env)
+#    env = ClippedRewardsWrapper(env)
 
     # exploration strategy
     exp_schedule = LinearExploration(env, config.eps_begin, 

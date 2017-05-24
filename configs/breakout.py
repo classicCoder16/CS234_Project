@@ -4,11 +4,11 @@ class config():
     render_test      = False
     env_name         = "Breakout-v0"
     overwrite_render = True
-    record           = True
+    record           = False
     high             = 255.
 
     # output config
-    output_path  = "results/breakout/"
+    output_path  = "results/breakout_transfer/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -25,7 +25,7 @@ class config():
     soft_epsilon      = 0.05
 
     # nature paper hyper params
-    nsteps_train       = 5000000
+    nsteps_train       = 10000000
     batch_size         = 32
     buffer_size        = 1000000
     target_update_freq = 10000
@@ -47,5 +47,5 @@ class config():
     eval_reward = 0.0
 
 
-    restore = False
+    restore = True
     restore_path = "results/q5_train_atari_nature/model.weights"

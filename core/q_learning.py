@@ -283,7 +283,6 @@ class QN(object):
         # replay memory to play
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
         rewards = []
-
         for i in range(num_episodes):
             total_reward = 0
             state = env.reset()
@@ -328,10 +327,10 @@ class QN(object):
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
         env = EpisodicLifeEnv(env)
         env = NoopResetEnv(env)
-        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
+#        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
         env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
                             overwrite_render=self.config.overwrite_render)
-        env = ClippedRewardsWrapper(env)
+#        env = ClippedRewardsWrapper(env)
 
         self.evaluate(env, 1)
 

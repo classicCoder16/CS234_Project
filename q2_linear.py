@@ -156,7 +156,7 @@ class Linear(DQN):
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=q_scope)
 	# Get collection of target_network variables
         target_q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=target_q_scope)
-	# Run the assign operation on each corresponding pair
+        # Run the assign operation on each corresponding pair
         assign_ops = []
         for param, target_param in zip(q_params, target_q_params):
             assign_ops.append(tf.assign(target_param, param))
