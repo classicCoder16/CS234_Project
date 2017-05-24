@@ -325,9 +325,9 @@ class QN(object):
         """
         env = gym.make(self.config.env_name)
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
-        env = EpisodicLifeEnv(env)
-        env = NoopResetEnv(env)
-#        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
+ #       env = EpisodicLifeEnv(env)
+#        env = NoopResetEnv(env)
+        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
         env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
                             overwrite_render=self.config.overwrite_render)
 #        env = ClippedRewardsWrapper(env)

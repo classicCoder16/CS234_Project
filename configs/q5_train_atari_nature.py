@@ -4,11 +4,11 @@ class config():
     render_test      = False
     env_name         = "Pong-v0"
     overwrite_render = True
-    record           = True
+    record           = False
     high             = 255.
 
     # output config
-    output_path  = "results/q5_train_atari_nature2/"
+    output_path  = "results/pong_transfer/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -44,3 +44,6 @@ class config():
     avg_reward = -21.0
     max_reward = -21.0
     eval_reward = -21.0
+
+    restore = True
+    restore_path = "results/breakout2/model.weights"
