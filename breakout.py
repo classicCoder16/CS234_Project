@@ -4,7 +4,7 @@ from utils.wrappers import PreproWrapper, MaxAndSkipEnv, ClippedRewardsWrapper, 
 
 from q1_schedule import LinearExploration, LinearSchedule
 from q3_nature import NatureQN
-
+from utils.dqn_wrappers import wrap_dqn
 from configs.breakout import config
 
 """
@@ -26,11 +26,12 @@ address-ip-of-the-server:6006
 if __name__ == '__main__':
     # make env
     env = gym.make(config.env_name)
-    env = EpisodicLifeEnv(env)
-    env = NoopResetEnv(env)
-#    env = MaxAndSkipEnv(env, skip=config.skip_frame)
-    env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
-                        overwrite_render=config.overwrite_render)
+    env = wrap_dqn(env)
+#     env = EpisodicLifeEnv(env)
+#     env = NoopResetEnv(env)
+# #    env = MaxAndSkipEnv(env, skip=config.skip_frame)
+#     env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
+#                         overwrite_render=config.overwrite_render)
 #    env = ClippedRewardsWrapper(env)
 
     # exploration strategy

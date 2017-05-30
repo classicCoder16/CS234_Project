@@ -11,7 +11,7 @@ from utils.general import get_logger, Progbar, export_plot
 from utils.replay_buffer import ReplayBuffer
 from utils.preprocess import greyscale, process_state
 from utils.wrappers import PreproWrapper, MaxAndSkipEnv, ClippedRewardsWrapper, NoopResetEnv, EpisodicLifeEnv
-
+from utils.dqn_wrappers import wrap_dqn
 
 class QN(object):
     """
@@ -325,13 +325,13 @@ class QN(object):
         """
         env = gym.make(self.config.env_name)
         env = gym.wrappers.Monitor(env, self.config.record_path, video_callable=lambda x: True, resume=True)
- #       env = EpisodicLifeEnv(env)
-#        env = NoopResetEnv(env)
-        env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
-        env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
-                            overwrite_render=self.config.overwrite_render)
-#        env = ClippedRewardsWrapper(env)
-
+#  #       env = EpisodicLifeEnv(env)
+# #        env = NoopResetEnv(env)
+#         env = MaxAndSkipEnv(env, skip=self.config.skip_frame)
+#         env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
+#                             overwrite_render=self.config.overwrite_render)
+# #        env = ClippedRewardsWrapper(env)
+        env = wrap_dqn(env)
         self.evaluate(env, 1)
 
 

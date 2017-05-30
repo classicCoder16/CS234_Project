@@ -2,13 +2,13 @@ class config():
     # env config
     render_train     = False
     render_test      = False
-    env_name         = "Breakout-v0"
+    env_name         = "BreakoutNoFrameskip-v4"
     overwrite_render = True
-    record           = False
+    record           = True
     high             = 255.
 
     # output config
-    output_path  = "results/breakout_transfer_2/"
+    output_path  = "results/breakout_real/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -25,7 +25,7 @@ class config():
     soft_epsilon      = 0.05
 
     # nature paper hyper params
-    nsteps_train       = 10000000
+    nsteps_train       = 5000000
     batch_size         = 32
     buffer_size        = 1000000
     target_update_freq = 10000
@@ -47,5 +47,5 @@ class config():
     eval_reward = 0.0
 
 
-    restore = True
+    restore = False
     restore_path = "results/q5_train_atari_nature/model.weights"
