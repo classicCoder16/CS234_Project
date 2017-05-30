@@ -4,7 +4,7 @@ class config():
     render_test      = False
     env_name         = "BreakoutNoFrameskip-v4"
     overwrite_render = True
-    record           = True
+    record           = False
     high             = 255.
 
     # output config

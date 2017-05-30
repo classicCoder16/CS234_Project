@@ -6,7 +6,7 @@ from q1_schedule import LinearExploration, LinearSchedule
 from q3_nature import NatureQN
 from utils.dqn_wrappers import wrap_dqn
 from configs.breakout import config
-
+import tensorflow as tf
 import argparse
 
 """
