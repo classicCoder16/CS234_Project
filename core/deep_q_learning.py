@@ -96,8 +96,11 @@ class DQN(QN):
         Assumes the graph has been constructed
         Creates a tf Session and run initializer of variables
         """
+
+        config2 = tf.ConfigProto(allow_soft_placement = True)
+        
         # create tf session
-        self.sess = tf.Session()
+        self.sess = tf.Session(config=config2)
 
         # tensorboard stuff
         self.add_summary()

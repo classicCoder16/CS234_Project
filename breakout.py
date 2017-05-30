@@ -7,6 +7,8 @@ from q3_nature import NatureQN
 from utils.dqn_wrappers import wrap_dqn
 from configs.breakout import config
 
+import argparse
+
 """
 Use deep Q network for the Atari game. Please report the final result.
 Feel free to change the configurations (in the configs/ folder). 
@@ -23,25 +25,35 @@ Then, connect remotely to
 address-ip-of-the-server:6006 
 6006 is the default port used by tensorboard.
 """
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Trains a DQN model')
+    parser.add_argument('-g', '--gpu', default=0, help="GPU number you would like to use")
+    args = parser.parse_args()
+    return args
+
 if __name__ == '__main__':
-    # make env
-    env = gym.make(config.env_name)
-    env = wrap_dqn(env)
-#     env = EpisodicLifeEnv(env)
-#     env = NoopResetEnv(env)
-# #    env = MaxAndSkipEnv(env, skip=config.skip_frame)
-#     env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
-#                         overwrite_render=config.overwrite_render)
-#    env = ClippedRewardsWrapper(env)
+    args = parse_args()
+    with tf.device('/gpu:' + str(args.gpu)):
+        # make env
+        env = gym.make(config.env_name)
+        env = wrap_dqn(env)
+    #     env = EpisodicLifeEnv(env)
+    #     env = NoopResetEnv(env)
+    # #    env = MaxAndSkipEnv(env, skip=config.skip_frame)
+    #     env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
+    #                         overwrite_render=config.overwrite_render)
+    #    env = ClippedRewardsWrapper(env)
 
-    # exploration strategy
-    exp_schedule = LinearExploration(env, config.eps_begin, 
-            config.eps_end, config.eps_nsteps)
+        # exploration strategy
+        exp_schedule = LinearExploration(env, config.eps_begin, 
+                config.eps_end, config.eps_nsteps)
 
-    # learning rate schedule
-    lr_schedule  = LinearSchedule(config.lr_begin, config.lr_end,
-            config.lr_nsteps)
+        # learning rate schedule
+        lr_schedule  = LinearSchedule(config.lr_begin, config.lr_end,
+                config.lr_nsteps)
 
-    # train model
-    model = NatureQN(env, config)
-    model.run(exp_schedule, lr_schedule)
+        # train model
+        model = NatureQN(env, config)
+        model.run(exp_schedule, lr_schedule)
