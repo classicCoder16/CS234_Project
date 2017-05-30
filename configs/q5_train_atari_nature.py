@@ -4,7 +4,7 @@ class config():
     render_test      = False
     env_name         = "Pong-v0"
     overwrite_render = True
-    record           = False
+    record           = True
     high             = 255.
 
     # output config
@@ -46,4 +46,4 @@ class config():
     eval_reward = -21.0
 
     restore = True
-    restore_path = "results/breakout2/model.weights"
+    restore_path = "results/breakout/model.weights"
