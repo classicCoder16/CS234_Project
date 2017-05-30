@@ -1,3 +1,4 @@
+import cv2
 import gym
 from utils.preprocess import greyscale, process_state
 from utils.wrappers import PreproWrapper, MaxAndSkipEnv, ClippedRewardsWrapper, NoopResetEnv, EpisodicLifeEnv

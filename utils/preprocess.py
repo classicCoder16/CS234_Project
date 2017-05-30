@@ -1,9 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('/usr/local/lib/python2.7/site-packages')
-import tensorflow as tf
 import cv2
-
 def greyscale(state):
     """
     Preprocess state (210, 160, 3) image into
@@ -58,9 +56,7 @@ def process(frame):
     else:
         assert False, "Unknown resolution."
     img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
-    print 'Here again!'
     resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
-    print 'Here!'
     x_t = resized_screen[18:102, :]
     x_t = np.reshape(x_t, [84, 84, 1])
     return x_t.astype(np.uint8)
