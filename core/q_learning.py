@@ -233,7 +233,7 @@ class QN(object):
 
         # last words
         self.logger.info("- Training done.")
-        self.save()
+        self.save(t)
         scores_eval += [self.evaluate()]
         export_plot(scores_eval, "Scores", self.config.plot_output)
 
@@ -260,7 +260,7 @@ class QN(object):
         # occasionaly save the weights
         if (t % self.config.saving_freq == 0):
             print 'Saving weights'
-            self.save()
+            self.save(t)
 
         return loss_eval, grad_eval
 
