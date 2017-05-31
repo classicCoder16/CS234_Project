@@ -11,7 +11,7 @@ from utils.general import get_logger, Progbar, export_plot
 from utils.replay_buffer import ReplayBuffer
 from utils.preprocess import greyscale, process_state
 from utils.wrappers import PreproWrapper, MaxAndSkipEnv, ClippedRewardsWrapper, NoopResetEnv, EpisodicLifeEnv
-from utils.dqn_wrappers import wrap_dqn
+from utils.dqn_wrappers import wrap_dqn_eval
 
 class QN(object):
     """
@@ -331,7 +331,7 @@ class QN(object):
 #         env = PreproWrapper(env, prepro=process_state, shape=(84, 84, 1), 
 #                             overwrite_render=self.config.overwrite_render)
 # #        env = ClippedRewardsWrapper(env)
-        env = wrap_dqn(env)
+        env = wrap_dqn_eval(env)
         self.evaluate(env, 1)
 
 

@@ -281,6 +281,13 @@ def wrap_dqn(env):
     env = ClippedRewardsWrapper(env)
     return env
 
+def wrap_dqn_eval(env):
+    env = NoopResetEnv(env, noop_max=30)
+    env = MaxAndSkipEnv(env, skip=4)
+    if 'FIRE' in env.unwrapped.get_action_meanings():
+        env = FireResetEnv(env)
+    env = PreproWrapper(env, prepro=process, shape=(84, 84, 1), overwrite_render=True, high=255)
+    return env
 
 class A2cProcessFrame(gym.Wrapper):
     def __init__(self, env):
