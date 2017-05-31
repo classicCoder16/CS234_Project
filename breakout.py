@@ -36,7 +36,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    print configs.output_path
+    print config.output_path
     with tf.device('/gpu:' + str(args.gpu)):
         # make env
         env = gym.make(config.env_name)
