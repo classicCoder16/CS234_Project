@@ -278,7 +278,9 @@ class QN(object):
             num_episodes = self.config.num_episodes_test
 
         if env is None:
-            env = self.env
+#            env = self.env
+            env = gym.make(self.config.env_name)
+            env = wrap_dqn_eval(env)
 
         # replay memory to play
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)

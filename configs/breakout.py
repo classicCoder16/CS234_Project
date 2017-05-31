@@ -8,7 +8,7 @@ class config():
     high             = 255.
 
     # output config
-    output_path  = "results/breakout_real_10000_v0/"
+    output_path  = "results/breakout_really_20000_v0/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -25,10 +25,10 @@ class config():
     soft_epsilon      = 0.05
 
     # nature paper hyper params
-    nsteps_train       = 5000000
+    nsteps_train       = 7000000
     batch_size         = 32
     buffer_size        = 1000000
-    target_update_freq = 10000
+    target_update_freq = 20000
     gamma              = 0.99
     learning_freq      = 4
     state_history      = 4
