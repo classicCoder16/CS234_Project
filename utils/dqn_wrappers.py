@@ -270,7 +270,7 @@ class PreproWrapper(gym.Wrapper):
 
 def wrap_dqn(env):
     """Apply a common set of wrappers for Atari games."""
-    assert 'NoFrameskip' in env.spec.id
+   # assert 'NoFrameskip' in env.spec.id
     env = EpisodicLifeEnv(env)
     env = NoopResetEnv(env, noop_max=30)
     env = MaxAndSkipEnv(env, skip=4)
