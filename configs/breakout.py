@@ -8,7 +8,7 @@ class config():
     high             = 255.
 
     # output config
-    output_path  = "results/breakout_real_20000_v0/"
+    output_path  = "results/breakout_real_10000_v0/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -28,7 +28,7 @@ class config():
     nsteps_train       = 5000000
     batch_size         = 32
     buffer_size        = 1000000
-    target_update_freq = 20000
+    target_update_freq = 10000
     gamma              = 0.99
     learning_freq      = 4
     state_history      = 4
