@@ -116,7 +116,12 @@ class DQN(QN):
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
             init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
-            head_layers = tf.contrib.framework.get_variables('q/fully_connected')+ tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
+            if config.num_tuned == 2:
+                print 'Initializing last 2 layers'
+                head_layers = tf.contrib.framework.get_variables('q/fully_connected')+ tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
+            else:
+                print 'Initializing last layer'
+                head_layers = tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
             print 'Initializing head layers'
             head_init = tf.variables_initializer(head_layers)
             self.sess.run(head_init)

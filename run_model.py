@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument('-n', '--nsteps', default=None, help="How many training iterations to run for")
     parser.add_argument('-rc', '--record', default=None, help="Whether to record the results")
     parser.add_argument('-u', '--update_freq', default=None, help="Update frequency for target network")
+    parser.add_argument('-nt', '--num_tuned', default=None, help="Number of the final fully connected layers to tune if restoring")
     args = parser.parse_args()
     return args
 
@@ -69,6 +70,9 @@ def modify_config(args):
 
     if args.update_freq is not None:
         config.target_update_freq = int(args.update_freq)
+
+    if args.num_tuned is not None:
+        config.num_tuned = int(args.num_tuned) 
 
     return config
 
