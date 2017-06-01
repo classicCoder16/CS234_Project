@@ -250,6 +250,12 @@ class Linear(DQN):
         # Get the appropriate list of params
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
 
+        if self.config.feat_extract:
+            if self.config.num_tuned == 2:
+                params = tf.contrib.framework.get_variables('q/fully_connected') + tf.contrib.framework.get_variables('q/fully_connected_1')
+            else:
+                params = tf.contrib.framework.get_variables('q/fully_connected_1')
+            print 'Params being updated are now:', params
         # Get a list of grad, var pairs 
         grads_and_vars = adam_opt.compute_gradients(self.loss, var_list=params)
 

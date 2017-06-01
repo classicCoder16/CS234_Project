@@ -39,6 +39,7 @@ def parse_args():
     parser.add_argument('-rc', '--record', default=None, help="Whether to record the results")
     parser.add_argument('-u', '--update_freq', default=None, help="Update frequency for target network")
     parser.add_argument('-nt', '--num_tuned', default=None, help="Number of the final fully connected layers to tune if restoring")
+    parser.add_argument('-fe', '--feat_extract', default=None, help="Whether to do just feature extraction when restoring weights")
     args = parser.parse_args()
     return args
 
@@ -47,6 +48,8 @@ def modify_config(args):
     from configs.general import config
     print args
     config.env_name = args.model + args.version
+
+    config.feat_extract = args.feat_extract
 
     if args.experiment:
         config.output_path = 'results/' + args.experiment + '/'
