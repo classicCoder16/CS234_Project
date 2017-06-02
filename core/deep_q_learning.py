@@ -139,7 +139,7 @@ class DQN(QN):
             self.saver.restore(self.sess, model_path)
 
         # Else if we want to handle transfer learning case
-        elif self.config.fine_tune:
+        elif self.config.fine_tune or self.config.feat_extract:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Fine-tuning from', model_path
             if self.config.num_tuned == 2:
