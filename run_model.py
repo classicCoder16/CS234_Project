@@ -65,7 +65,7 @@ def modify_config(args):
         config.restore = bool(args.restore)
 
     if args.restorepath is not None:
-        config.restore_path = args.restorepath
+        config.restore_path = 'results/' + args.restorepath + '/model.weights'
 
     if args.nsteps is not None:
         config.nsteps_train = int(args.nsteps)
