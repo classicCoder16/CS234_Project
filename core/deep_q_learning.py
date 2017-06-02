@@ -132,18 +132,26 @@ class DQN(QN):
         # for saving networks weights
         self.saver = tf.train.Saver()
 
-        # Handle Transfer learning case
+        # If we just want to restore from a file
         if self.config.restore:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
+            self.saver.restore(self.sess, model_path)
+
+        # Else if we want to handle transfer learning case
+        elif self.config.fine_tune:
+            model_path = tf.train.latest_checkpoint(self.config.restore_path)
+            print 'Fine-tuning from', model_path
             if self.config.num_tuned == 2:
                 print 'Initializing last 2 layers'
                 vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected', 'q/fully_connected_1', 'target_q/fully_connected', 'target_q/fully_connected_1'])
+                print 'Vars to restore are', vars_to_restore
                 init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
                 head_layers = tf.contrib.framework.get_variables('q/fully_connected')+ tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
-            else:
+            elif self.config.num_tuned == 1:
                 print 'Initializing last layer'
                 vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected_1', 'target_q/fully_connected_1'])
+                print 'vars to restore are', vars_to_restore
                 init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
                 head_layers = tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
             
@@ -154,7 +162,7 @@ class DQN(QN):
             print 'Initializing to pre-trained weights'
             init_fn(self.sess)
 
-        # Handle LWF case
+        # Else if we want to handle LWF case
         elif self.config.lwf:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
@@ -164,12 +172,27 @@ class DQN(QN):
             init_fn(self.sess)
             self.assign_to_new()
 
-        # Else, if self.config.eval, restore all params
-
-
         # synchronise q and target_q networks
         self.sess.run(self.update_target_op)
 
+    def initialize_eval(self):
+        # Allow placement of process on multiple GPUs
+        config2 = tf.ConfigProto(allow_soft_placement = True)
+        
+        # create tf session
+        self.sess = tf.Session(config=config2)
+
+        # for saving networks weights
+        self.saver = tf.train.Saver()
+
+        # initiliaze all variables
+        init = tf.global_variables_initializer()
+        self.sess.run(init)
+
+        model_path = tf.train.latest_checkpoint(self.config.restore_path)
+        print 'Restoring from', model_path
+        self.saver.restore(self.sess, model_path)
+        print 'Done!'
        
     def add_summary(self):
         """

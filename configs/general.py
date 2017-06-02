@@ -47,5 +47,6 @@ class config():
     eval_reward = 0.0
 
     num_tuned = 1
+    fine_tune = False
     restore = False
     restore_path = "results/q5_train_atari_nature/model.weights"

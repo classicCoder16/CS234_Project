@@ -72,6 +72,13 @@ class QN(object):
         pass
 
 
+    def initialize_eval(self):
+        """
+        Initialize variables for evaluation
+        """
+        pass
+
+
     def get_best_action(self, state):
         """
         Returns best action according to the network
@@ -307,7 +314,6 @@ class QN(object):
                 total_reward += reward
                 if done:
                     break
-
             # updates to perform at the end of an episode
             rewards.append(total_reward)     
 
@@ -352,4 +358,3 @@ class QN(object):
         # record one game at the end
         if self.config.record:
             self.record()
-        
