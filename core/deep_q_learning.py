@@ -91,6 +91,26 @@ class DQN(QN):
         self.add_optimizer_op("q")
 
 
+    '''
+    Takes a static pre-trained graph and assigns all variables in a new graph to the
+    original values (Does not include the new head, only the old one)
+    '''
+    def assign_to_new(self):
+        old_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
+        new_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_q')
+        print 'Old vars', old_vars
+        print 'New vars', new_vars
+        assign_ops = []
+        for old_var, new_var in zip(old_vars, new_vars):
+            assign_ops.append(tf.assign(new_var, old_var))
+
+        self.sess.run(tf.group(*assign_ops))
+
+
+    # def create_saver(self):
+    #     new_q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_q')
+    #     target_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+
     def initialize(self):
         """
         Assumes the graph has been constructed
@@ -111,6 +131,8 @@ class DQN(QN):
 
         # for saving networks weights
         self.saver = tf.train.Saver()
+
+        # Handle Transfer learning case
         if self.config.restore:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
@@ -130,6 +152,19 @@ class DQN(QN):
             self.sess.run(head_init)
             print 'Initializing to pre-trained weights'
             init_fn(self.sess)
+
+        # Handle LWF case
+        else if self.config.lwf:
+            model_path = tf.train.latest_checkpoint(self.config.restore_path)
+            print 'Restoring from', model_path
+            vars_to_restore = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
+            print 'Learning Without Forgetting, restoring', vars_to_restore
+            init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
+            init_fn(self.sess)
+            self.assign_to_new()
+
+        # Else, if self.config.eval, restore all params
+
 
         # synchronise q and target_q networks
         self.sess.run(self.update_target_op)
@@ -152,6 +187,9 @@ class DQN(QN):
 
         # add placeholders from the graph
         tf.summary.scalar("loss", self.loss)
+        if self.config.lwf:
+            tf.summary.scalar('DQN Loss', self.dqn_loss)
+            tf.summary.scalar('LWF Loss', self.lwf_loss)
         tf.summary.scalar("grads norm", self.grad_norm)
 
         # extra summaries from python -> placeholders

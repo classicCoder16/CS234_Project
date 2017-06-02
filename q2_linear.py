@@ -154,7 +154,11 @@ class Linear(DQN):
         
         # Get collection of q_scope variables
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=q_scope)
-	# Get collection of target_network variables
+        if self.config.lwf:
+            q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + q_scope)
+            q_params = [param for param in q_params if 'old' not in param.name]
+            print 'Q params in add_update_target_op', q_params
+	   # Get collection of target_network variables
         target_q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=target_q_scope)
         # Run the assign operation on each corresponding pair
         assign_ops = []
@@ -209,6 +213,38 @@ class Linear(DQN):
         q_sa = tf.reduce_sum(q*tf.one_hot(self.a, depth=num_actions), axis=1)
         self.loss = tf.reduce_mean((q_samps - q_sa)*(q_samps - q_sa))
 
+        # If we're doing learning without forgetting
+        if self.config.lwf:
+
+            # The DQN component of the loss
+            self.dqn_loss = self.loss
+
+            # Try the Knowledge Distillation loss
+            if self.config.lwf_loss == 'ce':
+
+                # Convert to prob. distr.
+                old_probs = tf.nn.softmax(self.out_old)
+                curr_probs = tf.nn.softmax(self.out_old_pred)
+
+                # Scale the probs by taking square root and normalizing
+                scaled_old_probs = tf.sqrt(old_probs)
+                scaled_old_probs /= tf.reduce_sum(scaled_old_probs, axis=1, keep_dims=True)
+
+                scaled_curr_probs = tf.sqrt(curr_probs)
+                scaled_curr_probs /= tf.reduce_sum(scaled_curr_probs, axis=1, keep_dims=True)
+
+                self.lwf_loss = tf.reduce_mean(-tf.reduce_sum(self.scaled_old_probs * tf.log(scaled_curr_probs), reduction_indices=[1]))
+
+            # Try the L2 loss instead
+            else:
+                diff = (self.out_old - self.out_old_pred)
+                batch_losses = 0.5*tf.reduce_sum(diff**2, axis=1)
+                self.lwf_loss = tf.reduce_mean(batch_losses)
+
+            # Reassign the overall loss to the weighted sum of the two losses
+            self.loss = self.dqn_loss + self.config.lwf_weight*self.lwf_loss
+
+
         ##############################################################
         ######################## END YOUR CODE #######################
 
@@ -255,7 +291,12 @@ class Linear(DQN):
                 params = tf.contrib.framework.get_variables('q/fully_connected') + tf.contrib.framework.get_variables('q/fully_connected_1')
             else:
                 params = tf.contrib.framework.get_variables('q/fully_connected_1')
-            print 'Params being updated are now:', params
+
+        if self.config.lwf:
+            params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + scope)
+
+        print 'Params being updated are now:', params
+
         # Get a list of grad, var pairs 
         grads_and_vars = adam_opt.compute_gradients(self.loss, var_list=params)
 

@@ -60,7 +60,39 @@ class NatureQN(Linear):
             conv3 = tf.contrib.layers.conv2d(conv2, num_outputs=64, kernel_size=3, stride=1, padding='SAME')
             flattened_state = tf.contrib.layers.flatten(conv3)
             h1 = tf.contrib.layers.fully_connected(flattened_state, num_outputs=512)
-            out = tf.contrib.layers.fully_connected(h1, num_outputs=num_actions, activation_fn=None)
+
+
+            if scope == 'q' and self.config.lwf:
+                self.out_old = tf.contrib.layers.fully_connected(h1, num_outputs=self.config.num_old_actions, activation_fn=None)
+            else:
+                out = tf.contrib.layers.fully_connected(h1, num_outputs=num_actions, activation_fn=None)
+
+        # If we are constructing the Q network during learning without forgetting,
+        # we have the same architecture up to the last fully connected layers
+        if scope == 'q' and self.config.lwf:
+            with tf.variable_scope('new_' + scope):
+
+                # Common architecture for both tasks
+                conv1_new = tf.contrib.layers.conv2d(state, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
+                conv2_new = tf.contrib.layers.conv2d(conv1_new, num_outputs=64, kernel_size=4, stride=2, padding='SAME')
+                conv3_new = tf.contrib.layers.conv2d(conv2_new, num_outputs=64, kernel_size=3, stride=1, padding='SAME')
+                flattened_state_new = tf.contrib.layers.flatten(conv3_new)
+
+                # If we make the last two fully connected layers different for a new action
+                if self.config.num_tuned == 2:
+                    # Old task branch of new network
+                    h1_old = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512, scope='old_fc')
+                    self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+
+                    # New task branch of new network
+                    h1_new = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512)
+                    out = tf.contrib.layers.fully_connected(h1_new, num_outputs=num_actions, activation_fn=None)
+
+                # Else we handle the case where the tasks diverge only at the last layer
+                else:
+                    h1_common = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512)
+                    self.out_old_pred = tf.contrib.layers.fully_connected(h1_common, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+                    out = tf.contrib.layers.fully_connected(h1_common, num_outputs=num_actions, activation_fn=None)
 
         ##############################################################
         ######################## END YOUR CODE #######################

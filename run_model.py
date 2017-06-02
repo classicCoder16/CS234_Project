@@ -40,6 +40,9 @@ def parse_args():
     parser.add_argument('-u', '--update_freq', default=None, help="Update frequency for target network")
     parser.add_argument('-nt', '--num_tuned', default=None, help="Number of the final fully connected layers to tune if restoring")
     parser.add_argument('-fe', '--feat_extract', default=None, help="Whether to do just feature extraction when restoring weights")
+    parser.add_argument('-lwf', '--learning_without_forgetting', default=None, help="Whether to do learning without forgetting")
+    parser.add_argument('-lwf_loss', '--lwf_loss', default='ce', help="What loss to use for learning without forgetting")
+    parser.add_argument('-lwf_weight', '--lwf_weight', default='ce', help="What weight to use for learning without forgetting loss")
     args = parser.parse_args()
     return args
 
@@ -76,6 +79,15 @@ def modify_config(args):
 
     if args.num_tuned is not None:
         config.num_tuned = int(args.num_tuned) 
+
+    if args.lwf is not None:
+        config.lwf = args.lwf
+
+    if args.lwf_loss is not None:
+        config.lwf_loss = args.lwf_loss
+
+    if args.lwf_weight is not None:
+        config.lwf_weight = args.lwf_weight
 
     return config
 
