@@ -154,7 +154,7 @@ class DQN(QN):
             init_fn(self.sess)
 
         # Handle LWF case
-        else if self.config.lwf:
+        elif self.config.lwf:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
             vars_to_restore = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
