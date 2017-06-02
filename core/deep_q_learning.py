@@ -148,6 +148,7 @@ class DQN(QN):
                 head_layers = tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
             
             print 'Initializing head layers'
+            print 'Head layers are', head_layers
             head_init = tf.variables_initializer(head_layers)
             self.sess.run(head_init)
             print 'Initializing to pre-trained weights'
