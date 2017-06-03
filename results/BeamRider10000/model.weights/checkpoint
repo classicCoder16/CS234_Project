@@ -1,0 +1,6 @@
+model_checkpoint_path: "model-4040000"
+all_model_checkpoint_paths: "model-4000000"
+all_model_checkpoint_paths: "model-4010000"
+all_model_checkpoint_paths: "model-4020000"
+all_model_checkpoint_paths: "model-4030000"
+all_model_checkpoint_paths: "model-4040000"
