@@ -153,11 +153,12 @@ class Linear(DQN):
         ################### YOUR CODE HERE - 5-10 lines #############
         
         # Get collection of q_scope variables
+        print 'Adding the update target op'
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=q_scope)
         if self.config.lwf:
             q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + q_scope)
             q_params = [param for param in q_params if 'old' not in param.name]
-            print 'Q params in add_update_target_op', q_params
+            # print 'Q params in add_update_target_op', q_params
 	   # Get collection of target_network variables
         target_q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=target_q_scope)
         # Run the assign operation on each corresponding pair
@@ -233,7 +234,7 @@ class Linear(DQN):
                 scaled_curr_probs = tf.sqrt(curr_probs)
                 scaled_curr_probs /= tf.reduce_sum(scaled_curr_probs, axis=1, keep_dims=True)
 
-                self.lwf_loss = tf.reduce_mean(-tf.reduce_sum(self.scaled_old_probs * tf.log(scaled_curr_probs), reduction_indices=[1]))
+                self.lwf_loss = tf.reduce_mean(-tf.reduce_sum(scaled_old_probs * tf.log(scaled_curr_probs), reduction_indices=[1]))
 
             # Try the L2 loss instead
             else:
@@ -295,7 +296,7 @@ class Linear(DQN):
         if self.config.lwf:
             params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + scope)
 
-        print 'Params being updated are now:', params
+        # print 'Params being updated are now:', params
 
         # Get a list of grad, var pairs 
         grads_and_vars = adam_opt.compute_gradients(self.loss, var_list=params)

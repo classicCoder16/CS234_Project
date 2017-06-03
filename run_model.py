@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument('-lwf', '--lwf', default=None, help="Whether to do learning without forgetting")
     parser.add_argument('-lwf_loss', '--lwf_loss', default='ce', help="What loss to use for learning without forgetting")
     parser.add_argument('-lwf_weight', '--lwf_weight', default=0.5, help="What weight to use for learning without forgetting loss")
+    parser.add_argument('-noa', '--num_old_actions', default=6, help="Output space of original task in LWF")
     parser.add_argument('-lr_begin', '--lr_begin', default=None, help="Initial learning rate to use")
     parser.add_argument('-lr_end', '--lr_end', default=None, help="Initial learning rate to use")       
     args = parser.parse_args()
@@ -97,6 +98,8 @@ def modify_config(args):
     config.lwf_loss = args.lwf_loss
 
     config.lwf_weight = args.lwf_weight
+
+    config.num_old_actions = int(args.num_old_actions)
 
     return config
 

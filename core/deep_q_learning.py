@@ -98,10 +98,15 @@ class DQN(QN):
     def assign_to_new(self):
         old_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
         new_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q')
-        print 'Old vars', old_vars
-        print 'New vars', new_vars
+        # print 'Old vars in Assign To New\n'
+        # for param in old_vars:
+        #     print param
+        # print 'New vars in Assign to New\n'
+        # for param in new_vars:
+        #     print param
         assign_ops = []
         for old_var, new_var in zip(old_vars, new_vars):
+            print old_var.op.name, new_var.op.name
             assign_ops.append(tf.assign(new_var, old_var))
         self.sess.run(tf.group(*assign_ops))
 
@@ -239,6 +244,41 @@ class DQN(QN):
             for param in old_params:
                 print param
 
+
+        elif self.config.lwf and self.config.restore_path_new:
+            # If we want to evaluate the old task on a learning without forgetting model
+            new_model_path = tf.train.latest_checkpoint(self.config.restore_path_new)
+            if self.config.num_tuned == 2:
+                print 'Evaluating with num tuned = 2'
+                old_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/old_fc')
+                new_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/fully_connected')
+                shared_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv')
+                print 'Shared params are', shared_params
+                names_to_vars = {}
+                for old_param, new_param in zip(old_task_params, new_task_params):
+                    names_to_vars[old_param.op.name] = new_param
+            else:
+                print 'Evaluating with num tuned = 1'
+                old_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/old_fc_1/')
+                new_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/fully_connected_1/')
+                shared_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv') + \
+                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/fully_connected/')
+            
+
+            print 'Shared params are', shared_params
+            print 'Old task params are', old_task_params
+            print 'New task params are', new_task_params
+            names_to_vars = {}
+            for old_param, new_param in zip(old_task_params, new_task_params):
+                names_to_vars[old_param.op.name] = new_param
+            print 'Names to vars', names_to_vars
+            init_fn_shared = tf.contrib.framework.assign_from_checkpoint_fn(new_model_path, shared_params)
+            old_saver = tf.train.Saver(var_list=names_to_vars)
+            old_saver.restore(self.sess, new_model_path)
+            init_fn_shared(self.sess)
+                # new_params = [param for param in new_params if 'fully_connected' not in param.op.name]
+
+
         # Restore entire model, and evaluate as usual
         else:
             print 'Restoring default'
@@ -246,6 +286,10 @@ class DQN(QN):
             print 'Restoring from', model_path
             self.saver.restore(self.sess, model_path)
             print 'Done!'
+            # vars_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+            # print 'Restoring', vars_to_restore
+            # init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
+            # init_fn(self.sess)
        
     def add_summary(self):
         """

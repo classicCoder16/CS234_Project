@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument('-rpo', '--restore_path_old', default=None, help='Experiment name of original model for old task in transfer learning')    
     parser.add_argument('-rpn', '--restore_path_new', default=None, help='Experiment name of original model for old task in transfer learning')
     parser.add_argument('-n', '--num_episodes_test', default=None, help='How many episodes you want to test on')
+    parser.add_argument('-noa', '--num_old_actions', default=6, help="Output space of original task in LWF")
     args = parser.parse_args()
     return args
 
@@ -80,12 +81,16 @@ def modify_config(args):
 
     if args.restore_path_new is not None:
         config.restore_path_new = 'results/' + args.restore_path_new + '/model.weights'
+    else:
+        config.restore_path_new = None
 
     config.lwf = args.lwf
 
     config.lwf_loss = args.lwf_loss
 
     config.lwf_weight = args.lwf_weight
+
+    config.num_old_actions = int(args.num_old_actions)
 
     return config
 
