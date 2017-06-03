@@ -44,6 +44,8 @@ def parse_args():
     parser.add_argument('-lwf', '--lwf', default=None, help="Whether to do learning without forgetting")
     parser.add_argument('-lwf_loss', '--lwf_loss', default='ce', help="What loss to use for learning without forgetting")
     parser.add_argument('-lwf_weight', '--lwf_weight', default=0.5, help="What weight to use for learning without forgetting loss")
+    parser.add_argument('-lr_begin', '--lr_begin', default=None, help="Initial learning rate to use")
+    parser.add_argument('-lr_end', '--lr_end', default=None, help="Initial learning rate to use")       
     args = parser.parse_args()
     return args
 
@@ -84,12 +86,16 @@ def modify_config(args):
     if args.num_tuned is not None:
         config.num_tuned = int(args.num_tuned) 
 
+    if args.lr_begin is not None:
+        config.lr_begin = float(args.lr_begin)
+
+    if args.lr_end is not None:
+        config.lr_end = float(args.lr_end)
+
     config.lwf = args.lwf
 
-    #if args.lwf_loss is not None:
     config.lwf_loss = args.lwf_loss
 
-    #if args.lwf_weight is not None:
     config.lwf_weight = args.lwf_weight
 
     return config
