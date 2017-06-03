@@ -67,6 +67,16 @@ class NatureQN(Linear):
             else:
                 out = tf.contrib.layers.fully_connected(h1, num_outputs=num_actions, activation_fn=None)
 
+        # Just for evaluation purposes, we need to create a separate head for the transfer learning
+        # models
+        # if scope == 'q' and self.config.fine_tune and self.config.test_time:
+        #     with tf.variable_scope('old_' + scope):
+        #         if self.config.num_tuned == 2:
+        #             h1_old = tf.contrib.layers.fully_connected(flattened_state, num_outputs=512)
+        #             self.old_out_ft = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None)
+        #         else:
+        #             self.old_out_ft = tf.contrib.layers.fully_connected(h1, num_outputs=self.config.num_old_actions, activation_fn=None)
+
         # If we are constructing the Q network during learning without forgetting,
         # we have the same architecture up to the last fully connected layers
         if scope == 'q' and self.config.lwf:

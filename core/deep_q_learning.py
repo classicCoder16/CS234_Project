@@ -96,14 +96,13 @@ class DQN(QN):
     original values (Does not include the new head, only the old one)
     '''
     def assign_to_new(self):
-        old_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
-        new_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_q')
+        old_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
+        new_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q')
         print 'Old vars', old_vars
         print 'New vars', new_vars
         assign_ops = []
         for old_var, new_var in zip(old_vars, new_vars):
             assign_ops.append(tf.assign(new_var, old_var))
-
         self.sess.run(tf.group(*assign_ops))
 
 
@@ -144,21 +143,27 @@ class DQN(QN):
             print 'Fine-tuning from', model_path
             if self.config.num_tuned == 2:
                 print 'Initializing last 2 layers'
-                vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected', 'q/fully_connected_1', 'target_q/fully_connected', 'target_q/fully_connected_1'])
+                # vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected/', 'q/fully_connected_1/', 'target_q/fully_connected/', 'target_q/fully_connected_1/'])
+                vars_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[:-4] + \
+                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='target_q')[:-4]
                 print 'Vars to restore are', vars_to_restore
-                init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
-                head_layers = tf.contrib.framework.get_variables('q/fully_connected')+ tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
+                # init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
+                # head_layers = tf.contrib.framework.get_variables('q/fully_connected/')+ tf.contrib.framework.get_variables('q/fully_connected_1/') + tf.contrib.framework.get_variables('target_q/fully_connected/') + tf.contrib.framework.get_variables('target_q/fully_connected_1/')
             elif self.config.num_tuned == 1:
                 print 'Initializing last layer'
-                vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected_1', 'target_q/fully_connected_1'])
-                print 'vars to restore are', vars_to_restore
-                init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
-                head_layers = tf.contrib.framework.get_variables('q/fully_connected_1') + tf.contrib.framework.get_variables('target_q/fully_connected_1')
+                # vars_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected_1/', 'target_q/fully_connected_1/'])
+                vars_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[:-2] + \
+                                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='target_q')[:-2]
+                print 'Vars to restore are', vars_to_restore
             
-            print 'Initializing head layers'
-            print 'Head layers are', head_layers
-            head_init = tf.variables_initializer(head_layers)
-            self.sess.run(head_init)
+
+            init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
+                # head_layers = tf.contrib.framework.get_variables('q/fully_connected_1/') + tf.contrib.framework.get_variables('target_q/fully_connected_1/')
+            
+            # print 'Initializing head layers'
+            # print 'Head layers are', head_layers
+            # head_init = tf.variables_initializer(head_layers)
+            # self.sess.run(head_init)
             print 'Initializing to pre-trained weights'
             init_fn(self.sess)
 
@@ -166,8 +171,8 @@ class DQN(QN):
         elif self.config.lwf:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
-            vars_to_restore = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
-            print 'Learning Without Forgetting, restoring', vars_to_restore
+            vars_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
+            print 'Learning Without Forgetting, restoring static graph:', vars_to_restore
             init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
             init_fn(self.sess)
             self.assign_to_new()
@@ -189,10 +194,58 @@ class DQN(QN):
         init = tf.global_variables_initializer()
         self.sess.run(init)
 
-        model_path = tf.train.latest_checkpoint(self.config.restore_path)
-        print 'Restoring from', model_path
-        self.saver.restore(self.sess, model_path)
-        print 'Done!'
+        if self.config.fine_tune:
+
+            print 'Restoring for transfer learning'
+
+            new_model_path = tf.train.latest_checkpoint(self.config.restore_path_new)
+            old_model_path = tf.train.latest_checkpoint(self.config.restore_path_old)
+
+            if self.config.num_tuned == 2:
+                print 'For fine-tuned 2 layers'
+                new_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[:-4]
+                old_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[-4:]
+                # new_params = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected', 'q/fully_connected_1', 'target_q/fully_connected', 'target_q/fully_connected_1'])
+                # old_params = tf.contrib.framework.get_variables_to_restore(include=['q/fully_connected', 'q/fully_connected_1', 'target_q/fully_connected', 'target_q/fully_connected_1'])
+            elif self.config.num_tuned == 1:
+                print 'For fine-tuned 1 layer'
+                new_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[:-2]
+                old_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')[-2:]
+                # new_params = tf.contrib.framework.get_variables_to_restore(exclude=['q/fully_connected_1', 'target_q/fully_connected_1'])
+                # old_params = tf.contrib.framework.get_variables_to_restore(include=['q/fully_connected_1', 'target_q/fully_connected_1'])
+            init_fn_new = tf.contrib.framework.assign_from_checkpoint_fn(new_model_path, new_params)
+            init_fn_old = tf.contrib.framework.assign_from_checkpoint_fn(old_model_path, old_params)
+            init_fn_new(self.sess)
+            init_fn_old(self.sess)
+            # # Restore the new params of the transfer learning model
+            # new_model_path = tf.train.latest_checkpoint(self.config.restore_path_new)
+            # new_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='q')
+            # init_fn_new = tf.contrib.framework.assign_from_checkpoint_fn(new_model_path, new_params)
+            # init_fn_new(self.sess)
+
+            # # Restore the old head from a different checkpoint
+            # old_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='old_q')
+            # names_to_vars = {v.op.name[4:]: v for v in old_vars}
+            # print 'Names to Vars is', names_to_vars
+            # old_saver = tf.train.Saver(var_list=names_to_vars)
+            # old_model_path = tf.train.latest_checkpoint(self.config.restore_path_old)
+            # old_saver.restore(self.sess, old_model_path)
+
+            print 'New task params\n'
+            for param in new_params:
+                print param
+
+            print 'Old task params\n'
+            for param in old_params:
+                print param
+
+        # Restore entire model, and evaluate as usual
+        else:
+            print 'Restoring default'
+            model_path = tf.train.latest_checkpoint(self.config.restore_path)
+            print 'Restoring from', model_path
+            self.saver.restore(self.sess, model_path)
+            print 'Done!'
        
     def add_summary(self):
         """

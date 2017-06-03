@@ -288,9 +288,9 @@ class Linear(DQN):
 
         if self.config.feat_extract:
             if self.config.num_tuned == 2:
-                params = tf.contrib.framework.get_variables('q/fully_connected') + tf.contrib.framework.get_variables('q/fully_connected_1')
+                params = tf.contrib.framework.get_variables('q/fully_connected/') + tf.contrib.framework.get_variables('q/fully_connected_1/')
             else:
-                params = tf.contrib.framework.get_variables('q/fully_connected_1')
+                params = tf.contrib.framework.get_variables('q/fully_connected_1/')
 
         if self.config.lwf:
             params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + scope)
