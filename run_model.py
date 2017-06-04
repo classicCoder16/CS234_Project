@@ -97,7 +97,7 @@ def modify_config(args):
 
     config.lwf_loss = args.lwf_loss
 
-    config.lwf_weight = args.lwf_weight
+    config.lwf_weight = float(args.lwf_weight)
 
     config.num_old_actions = int(args.num_old_actions)
 
