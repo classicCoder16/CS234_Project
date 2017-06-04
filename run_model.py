@@ -48,6 +48,8 @@ def parse_args():
     parser.add_argument('-lr_begin', '--lr_begin', default=None, help="Initial learning rate to use")
     parser.add_argument('-lr_end', '--lr_end', default=None, help="Initial learning rate to use")
     parser.add_argument('-oe', '--old_env_name', default=None, help="Name of the old environment you want to test on")       
+    parser.add_argument('-cv', '--clip_val', default=None, help="Value to clip gradients at")
+    parser.add_argument('-ef', '--eval_freq', default=250000, help="How often to evaluate the model")
     args = parser.parse_args()
     return args
 
@@ -93,6 +95,8 @@ def modify_config(args):
 
     if args.lr_end is not None:
         config.lr_end = float(args.lr_end)
+    if args.clip_val is not None:
+	config.clip_val = float(args.clip_val)
 
     config.lwf = args.lwf
 
@@ -103,6 +107,8 @@ def modify_config(args):
     config.num_old_actions = int(args.num_old_actions)
 
     config.old_env_name = args.old_env_name
+
+    config.eval_freq = int(args.eval_freq)
 
     return config
 

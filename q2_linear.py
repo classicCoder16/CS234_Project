@@ -303,7 +303,7 @@ class Linear(DQN):
 
         # Split list into two lists
         grs, vrs = zip(*grads_and_vars)
-
+	print 'Vrs is', vrs
         # If we're doing clipping, clip the gradients
         # Note: I believe it makes more sense to clip by global norm
         # than clippling each individually, since otherwise we more
