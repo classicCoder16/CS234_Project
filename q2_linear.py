@@ -242,6 +242,13 @@ class Linear(DQN):
                 batch_losses = tf.reduce_max(tf.abs(diff), axis=1)
                 self.lwf_loss = tf.reduce_mean(batch_losses)
 
+
+            # Try the L-Inf loss instead
+            elif self.config.lwf_loss == 'l1':
+                diff = (self.out_old - self.out_old_pred)
+                batch_losses = tf.reduce_sum(tf.abs(diff), axis=1)
+                self.lwf_loss = tf.reduce_mean(batch_losses)
+
             # Default to L2 loss
             else: 
                 diff = (self.out_old - self.out_old_pred)
