@@ -91,6 +91,18 @@ class QN(object):
         raise NotImplementedError
 
 
+    def get_best_action_old(self, state):
+        """
+        Returns best old action according to the network
+    
+        Args:
+            state: observation from gym
+        Returns:
+            tuple: action, q values
+        """
+        raise NotImplementedError
+
+
     def get_action(self, state):
         """
         Returns action with some epsilon strategy
@@ -102,6 +114,19 @@ class QN(object):
             return self.env.action_space.sample()
         else:
             return self.get_best_action(state)[0]
+
+
+    def get_action_old(self, state, env):
+        """
+        Returns action with some epsilon strategy
+
+        Args:
+            state: observation from gym
+        """
+        if np.random.random() < self.config.soft_epsilon:
+            return env.action_space.sample()
+        else:
+            return self.get_best_action_old(state)[0]
 
 
     def update_target_params(self):
@@ -124,6 +149,8 @@ class QN(object):
         self.std_q = 0
         
         self.eval_reward = self.config.eval_reward
+        if self.config.lwf:
+            self.eval_reward_old = 0.0
 
 
     def update_averages(self, rewards, max_q_values, q_values, scores_eval):
@@ -168,6 +195,9 @@ class QN(object):
         t = last_eval = last_record = 0 # time control of nb of steps
         scores_eval = [] # list of scores computed at iteration time
         scores_eval += [self.evaluate()]
+        if self.config.lwf:
+            scores_eval_old = []
+            scores_eval_old += [self.evaluate_old()]
         
         prog = Progbar(target=self.config.nsteps_train)
 
@@ -206,6 +236,8 @@ class QN(object):
                 if ((t > self.config.learning_start) and (t % self.config.log_freq == 0) and
                    (t % self.config.learning_freq == 0)):
                     self.update_averages(rewards, max_q_values, q_values, scores_eval)
+                    if self.config.lwf and len(scores_eval_old) > 0:
+                        self.eval_reward_old = scores_eval_old[-1]
                     exp_schedule.update(t)
                     lr_schedule.update(t)
                     if len(rewards) > 0:
@@ -232,6 +264,8 @@ class QN(object):
                 last_eval = 0
                 print("")
                 scores_eval += [self.evaluate()]
+                if self.config.lwf:
+                    scores_eval_old += [self.evaluate_old()]
 
             if (t > self.config.learning_start) and self.config.record and (last_record > self.config.record_freq):
                 self.logger.info("Recording...")
@@ -242,6 +276,8 @@ class QN(object):
         self.logger.info("- Training done.")
         self.save(t)
         scores_eval += [self.evaluate()]
+        if self.config.lwf:
+            scores_eval_old += [self.evaluate_old()]
         export_plot(scores_eval, "Scores", self.config.plot_output)
 
 
@@ -322,6 +358,60 @@ class QN(object):
 
         if num_episodes > 1:
             msg = "Average reward: {:04.2f} +/- {:04.2f}".format(avg_reward, sigma_reward)
+            self.logger.info(msg)
+
+        return avg_reward
+
+    def evaluate_old(self, env=None, num_episodes=None):
+        """
+        Evaluation with same procedure as the training
+        """
+        # log our activity only if default call
+        if num_episodes is None:
+            self.logger.info("Evaluating Old Environment...")
+
+        # arguments defaults
+        if num_episodes is None:
+            num_episodes = 10
+
+#         if env is None:
+# #            env = self.env
+        env = gym.make(self.config.old_env_name)
+        env = wrap_dqn_eval(env)
+
+        # replay memory to play
+        replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
+        rewards = []
+        for i in range(num_episodes):
+            total_reward = 0
+            state = env.reset()
+            while True:
+                if self.config.render_test: env.render()
+
+                # store last state in buffer
+                idx     = replay_buffer.store_frame(state)
+                q_input = replay_buffer.encode_recent_observation()
+                action = self.get_action_old(q_input, env)
+
+                # perform action in env
+                new_state, reward, done, info = env.step(action)
+
+                # store in replay memory
+                replay_buffer.store_effect(idx, action, reward, done)
+                state = new_state
+
+                # count reward
+                total_reward += reward
+                if done:
+                    break
+            # updates to perform at the end of an episode
+            rewards.append(total_reward)     
+
+        avg_reward = np.mean(rewards)
+        sigma_reward = np.sqrt(np.var(rewards) / len(rewards))
+
+        if num_episodes > 1:
+            msg = "Average reward on old task: {:04.2f} +/- {:04.2f}".format(avg_reward, sigma_reward)
             self.logger.info(msg)
 
         return avg_reward

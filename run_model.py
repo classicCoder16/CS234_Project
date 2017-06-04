@@ -46,7 +46,8 @@ def parse_args():
     parser.add_argument('-lwf_weight', '--lwf_weight', default=0.5, help="What weight to use for learning without forgetting loss")
     parser.add_argument('-noa', '--num_old_actions', default=6, help="Output space of original task in LWF")
     parser.add_argument('-lr_begin', '--lr_begin', default=None, help="Initial learning rate to use")
-    parser.add_argument('-lr_end', '--lr_end', default=None, help="Initial learning rate to use")       
+    parser.add_argument('-lr_end', '--lr_end', default=None, help="Initial learning rate to use")
+    parser.add_argument('-oe', '--old_env_name', default=None, help="Name of the old environment you want to test on")       
     args = parser.parse_args()
     return args
 
@@ -100,6 +101,8 @@ def modify_config(args):
     config.lwf_weight = float(args.lwf_weight)
 
     config.num_old_actions = int(args.num_old_actions)
+
+    config.old_env_name = args.old_env_name
 
     return config
 

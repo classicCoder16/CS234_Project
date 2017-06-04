@@ -305,6 +305,8 @@ class DQN(QN):
         self.std_q_placeholder  = tf.placeholder(tf.float32, shape=(), name="std_q")
 
         self.eval_reward_placeholder = tf.placeholder(tf.float32, shape=(), name="eval_reward")
+        if self.config.lwf:
+            self.eval_reward_old_placeholder = tf.placeholder(tf.float32, shape=(), name="eval_reward_old")
 
         # add placeholders from the graph
         tf.summary.scalar("loss", self.loss)
@@ -323,7 +325,9 @@ class DQN(QN):
         tf.summary.scalar("Std Q", self.std_q_placeholder)
 
         tf.summary.scalar("Eval Reward", self.eval_reward_placeholder)
-            
+        if self.config.lwf:
+            tf.summary.scalar("Eval Reward Old", self.eval_reward_old_placeholder)
+
         # logging
         self.merged = tf.summary.merge_all()
         self.file_writer = tf.summary.FileWriter(self.config.output_path, 
@@ -352,6 +356,20 @@ class DQN(QN):
             action_values: (np array) q values for all actions
         """
         action_values = self.sess.run(self.q, feed_dict={self.s: [state]})[0]
+        return np.argmax(action_values), action_values
+
+
+    def get_best_action_old(self, state):
+        """
+        Return best action
+
+        Args:
+            state: 4 consecutive observations from gym
+        Returns:
+            action: (int)
+            action_values: (np array) q values for all actions
+        """
+        action_values = self.sess.run(self.out_old_pred, feed_dict={self.s: [state]})[0]
         return np.argmax(action_values), action_values
 
 
@@ -388,6 +406,9 @@ class DQN(QN):
             self.std_q_placeholder: self.std_q, 
             self.eval_reward_placeholder: self.eval_reward, 
         }
+
+        if self.config.lwf:
+            fd[self.eval_reward_old_placeholder] = self.eval_reward_old
 
         loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm, 
                                                  self.merged, self.train_op], feed_dict=fd)
