@@ -50,6 +50,7 @@ def parse_args():
     parser.add_argument('-oe', '--old_env_name', default=None, help="Name of the old environment you want to test on")       
     parser.add_argument('-cv', '--clip_val', default=None, help="Value to clip gradients at")
     parser.add_argument('-ef', '--eval_freq', default=250000, help="How often to evaluate the model")
+    parser.add_argument('-noise', '--noise', default=None, type=bool, help="Whether you want to use noise in LWF.")
     args = parser.parse_args()
     return args
 
@@ -109,6 +110,8 @@ def modify_config(args):
     config.old_env_name = args.old_env_name
 
     config.eval_freq = int(args.eval_freq)
+
+    config.noise = args.noise
 
     return config
 

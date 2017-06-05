@@ -58,6 +58,9 @@ class Linear(DQN):
         img_height, img_width, nchannels = state_shape
         print 'State shape is', state_shape
         self.s = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
+        if self.config.noise:
+            print 'Adding placeholder'
+            self.n = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
         self.a = tf.placeholder(tf.int32, shape=(None))
         self.r = tf.placeholder(tf.float32, shape=(None))
         self.sp = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
@@ -316,7 +319,7 @@ class Linear(DQN):
 
         # Split list into two lists
         grs, vrs = zip(*grads_and_vars)
-	print 'Vrs is', vrs
+        print 'Vrs is', vrs
         # If we're doing clipping, clip the gradients
         # Note: I believe it makes more sense to clip by global norm
         # than clippling each individually, since otherwise we more

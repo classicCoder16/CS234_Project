@@ -14,7 +14,7 @@ class DQN(QN):
         raise NotImplementedError
 
 
-    def get_q_values_op(self, scope, reuse=False):
+    def get_q_values_op(self, state, scope, noise=None, reuse=False):
         """
         set Q values, of shape = (batch_size, num_actions)
         """
@@ -75,7 +75,13 @@ class DQN(QN):
 
         # compute Q values of state
         s = self.process_state(self.s)
-        self.q = self.get_q_values_op(s, scope="q", reuse=False)
+        if self.config.noise:
+            print 'Adding noise'
+            noise = self.process_state(self.n)
+            print 'noise is', noise
+            self.q = self.get_q_values_op(s, scope="q", reuse=False, noise=noise)
+        else:
+            self.q = self.get_q_values_op(s, scope="q", reuse=False)
 
         # compute Q values of next state
         sp = self.process_state(self.sp)
@@ -98,6 +104,10 @@ class DQN(QN):
     def assign_to_new(self):
         old_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
         new_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q')
+        if self.config.num_tuned == 2:
+            new_vars = [var for var in new_vars if 'new_q/fully_connected' not in var.op.name]
+        else:
+            new_vars = [var for var in new_vars if 'new_q/fully_connected_1' not in var.op.name]
         # print 'Old vars in Assign To New\n'
         # for param in old_vars:
         #     print param
@@ -369,7 +379,7 @@ class DQN(QN):
             action: (int)
             action_values: (np array) q values for all actions
         """
-        action_values = self.sess.run(self.out_old_pred, feed_dict={self.s: [state]})[0]
+        action_values = self.sess.run(self.out_old_pred, feed_dict={self.n: [state]})[0]
         return np.argmax(action_values), action_values
 
 
@@ -387,7 +397,7 @@ class DQN(QN):
 
         s_batch, a_batch, r_batch, sp_batch, done_mask_batch = replay_buffer.sample(
             self.config.batch_size)
-
+            
 
         fd = {
             # inputs
@@ -409,6 +419,13 @@ class DQN(QN):
 
         if self.config.lwf:
             fd[self.eval_reward_old_placeholder] = self.eval_reward_old
+
+            if self.config.noise:
+                state_shape = list(self.env.observation_space.shape)
+                img_height, img_width, nchannels = state_shape
+                noise = np.random.choice(np.arange(256, dtype=np.uint8), replace=True, size=[self.config.batch_size, \
+                                img_height, img_width, nchannels*self.config.state_history])
+                fd[self.n] = noise
 
         loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm, 
                                                  self.merged, self.train_op], feed_dict=fd)

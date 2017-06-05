@@ -16,7 +16,7 @@ class NatureQN(Linear):
     https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
     https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
     """
-    def get_q_values_op(self, state, scope, reuse=False):
+    def get_q_values_op(self, state, scope, noise=None, reuse=False):
         """
         Returns Q values for all actions
 
@@ -55,7 +55,11 @@ class NatureQN(Linear):
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################ 
         with tf.variable_scope(scope, reuse=reuse):
-            conv1 = tf.contrib.layers.conv2d(state, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
+            print 'n in here is', noise
+            if self.config.lwf and self.config.noise and scope == 'q':
+                conv1 = tf.contrib.layers.conv2d(noise, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
+            else:
+                conv1 = tf.contrib.layers.conv2d(state, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
             conv2 = tf.contrib.layers.conv2d(conv1, num_outputs=64, kernel_size=4, stride=2, padding='SAME')
             conv3 = tf.contrib.layers.conv2d(conv2, num_outputs=64, kernel_size=3, stride=1, padding='SAME')
             flattened_state = tf.contrib.layers.flatten(conv3)
@@ -91,8 +95,9 @@ class NatureQN(Linear):
                 # If we make the last two fully connected layers different for a new action
                 if self.config.num_tuned == 2:
                     # Old task branch of new network
-                    h1_old = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512, scope='old_fc')
-                    self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+                    if not self.config.noise:
+                        h1_old = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512, scope='old_fc')
+                        self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
 
                     # New task branch of new network
                     h1_new = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512)
@@ -101,9 +106,26 @@ class NatureQN(Linear):
                 # Else we handle the case where the tasks diverge only at the last layer
                 else:
                     h1_common = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512)
-                    self.out_old_pred = tf.contrib.layers.fully_connected(h1_common, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+                    if not self.config.noise:
+                        self.out_old_pred = tf.contrib.layers.fully_connected(h1_common, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
                     out = tf.contrib.layers.fully_connected(h1_common, num_outputs=num_actions, activation_fn=None)
+            
+            if self.config.noise:
+                with tf.variable_scope('new_' + scope, reuse=True):
+                    conv1_old = tf.contrib.layers.conv2d(noise, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
+                    conv2_old = tf.contrib.layers.conv2d(conv1_old, num_outputs=64, kernel_size=4, stride=2, padding='SAME')
+                    conv3_old = tf.contrib.layers.conv2d(conv2_old, num_outputs=64, kernel_size=3, stride=1, padding='SAME')
+                    flattened_state_old = tf.contrib.layers.flatten(conv3_old)
+                    if self.config.num_tuned == 1:
+                        h1_old = tf.contrib.layers.fully_connected(flattened_state_old, num_outputs=512)
 
+                with tf.variable_scope('new_' + scope):
+                    if self.config.num_tuned == 2:
+                        h1_old = tf.contrib.layers.fully_connected(flattened_state_old, num_outputs=512, scope='old_fc') 
+                        self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+                        print 'h1_old', h1_old
+                    else:
+                        self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1') 
         ##############################################################
         ######################## END YOUR CODE #######################
         return out
