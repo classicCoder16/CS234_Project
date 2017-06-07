@@ -56,7 +56,7 @@ def modify_config(args):
     config.test_time = True
     config.feat_extract = args.feat_extract
     config.fine_tune = args.fine_tune
-
+    config.noise = False
     if args.restorepath is not None:
         config.restore_path = 'results/' + args.restorepath + '/model.weights'
 
