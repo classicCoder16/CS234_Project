@@ -98,7 +98,6 @@ class NatureQN(Linear):
                     # Old task branch of new network
                     if not self.config.noise:
                         h1_old = tf.contrib.layers.fully_connected(flattened_state_new, num_outputs=512, scope='old_fc')
-                        self.out_old_pred_inter = h1_old
                         self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
 
                     # New task branch of new network
@@ -124,7 +123,8 @@ class NatureQN(Linear):
                 with tf.variable_scope('new_' + scope):
                     if self.config.num_tuned == 2:
                         h1_old = tf.contrib.layers.fully_connected(flattened_state_old, num_outputs=512, scope='old_fc') 
-                        self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
+                        self.out_old_pred_inter = h1_old
+			self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1')
                         print 'h1_old', h1_old
                     else:
                         self.out_old_pred = tf.contrib.layers.fully_connected(h1_old, num_outputs=self.config.num_old_actions, activation_fn=None, scope='old_fc_1') 
