@@ -258,6 +258,10 @@ class Linear(DQN):
                 batch_losses = 0.5*tf.reduce_sum(diff**2, axis=1)
                 self.lwf_loss = tf.reduce_mean(batch_losses)
 
+                diff_2 = (self.out_old_inter - self.out_old_pred_inter)
+                batch_losses_2 = tf.reduce_sum(diff_2**2, axis=1)
+                self.lwf_loss += tf.reduce_mean(batch_losses_2)
+
             # Reassign the overall loss to the weighted sum of the two losses
             self.loss = self.dqn_loss + self.config.lwf_weight*self.lwf_loss
 
