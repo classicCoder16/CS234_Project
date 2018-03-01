@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument('-n', '--nsteps', default=None, help="How many training iterations to run for")
     parser.add_argument('-rc', '--record', default=None, help="Whether to record the results")
     parser.add_argument('-u', '--update_freq', default=None, help="Update frequency for target network")
-    parser.add_argument('-nt', '--num_tuned', default=None, help="Number of the final fully connected layers to tune if restoring")
+    parser.add_argument('-nt', '--num_tuned', default=None, help="Number of layers to tune if restoring")
     parser.add_argument('-fe', '--feat_extract', default=None, help="Whether to do just feature extraction when restoring weights")
     parser.add_argument('-lwf', '--lwf', default=None, help="Whether to do learning without forgetting")
     parser.add_argument('-lwf_loss', '--lwf_loss', default='ce', help="What loss to use for learning without forgetting")
@@ -51,6 +51,9 @@ def parse_args():
     parser.add_argument('-cv', '--clip_val', default=None, help="Value to clip gradients at")
     parser.add_argument('-ef', '--eval_freq', default=250000, help="How often to evaluate the model")
     parser.add_argument('-noise', '--noise', default=None, type=bool, help="Whether you want to use noise in LWF.")
+    parser.add_argument('-adv', '--adv', default=False, type=bool, help="Whether you want to use adversarial noise in LWF.")
+    parser.add_argument('-np', '--num_penal', default=2, type=int, help="How many layer penalties to add for LWF")
+    parser.add_argument('-nai', '--num_adv_iter', default=5, type=int, help="How often to use adversarial noise")
     args = parser.parse_args()
     return args
 
@@ -112,6 +115,12 @@ def modify_config(args):
     config.eval_freq = int(args.eval_freq)
 
     config.noise = args.noise
+
+    config.adv = args.adv
+
+    config.num_penal = int(args.num_penal)
+
+    config.num_adv_iter = int(args.num_adv_iter)
 
     return config
 

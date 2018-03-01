@@ -59,7 +59,7 @@ class Linear(DQN):
         print 'State shape is', state_shape
         self.s = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
         if self.config.noise:
-            print 'Adding placeholder'
+            print 'Adding noise placeholder'
             self.n = tf.placeholder(tf.uint8, shape=(None, img_height, img_width, nchannels*self.config.state_history))
         self.a = tf.placeholder(tf.int32, shape=(None))
         self.r = tf.placeholder(tf.float32, shape=(None))
@@ -158,11 +158,13 @@ class Linear(DQN):
         # Get collection of q_scope variables
         print 'Adding the update target op'
         q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=q_scope)
+
+        # The target q network only has the new weights attached, not the old output head
         if self.config.lwf:
             q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='new_' + q_scope)
             q_params = [param for param in q_params if 'old' not in param.name]
-            # print 'Q params in add_update_target_op', q_params
-	   # Get collection of target_network variables
+        
+        # Get collection of target_network variables
         target_q_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=target_q_scope)
         # Run the assign operation on each corresponding pair
         assign_ops = []
@@ -258,12 +260,21 @@ class Linear(DQN):
                 batch_losses = 0.5*tf.reduce_sum(diff**2, axis=1)
                 self.lwf_loss = tf.reduce_mean(batch_losses)
 
-                diff_2 = (self.out_old_inter - self.out_old_pred_inter)
-                batch_losses_2 = tf.reduce_sum(diff_2**2, axis=1)
-                self.lwf_loss += tf.reduce_mean(batch_losses_2)
+                if self.config.num_penal > 1:
+                    diff_2 = (self.out_old_inter - self.out_old_pred_inter)
+                    batch_losses_2 = tf.reduce_sum(diff_2**2, axis=1)
+                    self.lwf_loss += tf.reduce_mean(batch_losses_2)
+
+                if self.config.num_penal > 2:
+                    diff_3 = self.conv3_pred - self.out_old_conv3
+                    batch_losses_3 = tf.reduce_mean(diff_3**2, axis=1)
+                    self.lwf_loss += tf.reduce_mean(batch_losses_3)
 
             # Reassign the overall loss to the weighted sum of the two losses
             self.loss = self.dqn_loss + self.config.lwf_weight*self.lwf_loss
+
+            # Used for adversarial update
+            self.noise_grad = tf.gradients(self.lwf_loss, [self.n])[0]
 
 
         ##############################################################

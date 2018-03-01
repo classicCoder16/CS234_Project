@@ -99,21 +99,31 @@ class DQN(QN):
 
     '''
     Takes a static pre-trained graph and assigns all variables in a new graph to the
-    original values (Does not include the new head, only the old one)
+    original values (Does not include the new head(s), only the old one(s))
     '''
     def assign_to_new(self):
         old_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
         new_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q')
-        if self.config.num_tuned == 2:
-            new_vars = [var for var in new_vars if 'new_q/fully_connected' not in var.op.name]
-        else:
-            new_vars = [var for var in new_vars if 'new_q/fully_connected_1' not in var.op.name]
-        # print 'Old vars in Assign To New\n'
-        # for param in old_vars:
-        #     print param
-        # print 'New vars in Assign to New\n'
-        # for param in new_vars:
-        #     print param
+        filtered_vars = []
+        for var in new_vars:
+            if self.config.num_tuned == 3 and ('new_q/Conv_2' in var.op.name):
+                continue
+            if self.config.num_tuned >= 2 and 'new_q/fully_connected' in var.op.name:
+                continue
+            if self.config.num_tuned == 1 and 'new_q/fully_connected_1' in var.op.name:
+                continue
+            filtered_vars.append(var)
+        new_vars = filtered_vars
+        # if self.config.num_tuned == 2:
+        #     new_vars = [var for var in new_vars if 'new_q/fully_connected' not in var.op.name]
+        # else:
+        #     new_vars = [var for var in new_vars if 'new_q/fully_connected_1' not in var.op.name]
+        print 'Old vars in Assign To New\n'
+        for param in old_vars:
+            print param
+        print 'New vars in Assign to New\n'
+        for param in new_vars:
+            print param
         assign_ops = []
         for old_var, new_var in zip(old_vars, new_vars):
             print old_var.op.name, new_var.op.name
@@ -186,10 +196,15 @@ class DQN(QN):
         elif self.config.lwf:
             model_path = tf.train.latest_checkpoint(self.config.restore_path)
             print 'Restoring from', model_path
+
+            # Explicitly get only the old static graph
             vars_to_restore = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q')
             print 'Learning Without Forgetting, restoring static graph:', vars_to_restore
             init_fn = tf.contrib.framework.assign_from_checkpoint_fn(model_path, vars_to_restore)
             init_fn(self.sess)
+
+            # Now, we also need to initialize the shared parameters and the old head
+            # of the new network to the same thing as the static graph
             self.assign_to_new()
 
         # synchronise q and target_q networks
@@ -258,15 +273,22 @@ class DQN(QN):
         elif self.config.lwf and self.config.restore_path_new:
             # If we want to evaluate the old task on a learning without forgetting model
             new_model_path = tf.train.latest_checkpoint(self.config.restore_path_new)
+            if self.config.num_tuned == 3:
+                old_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/old')
+                new_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/fully_connected')
+                new_task_params += tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv_2')
+                shared_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv/')
+                shared_params += tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv_1')
+
             if self.config.num_tuned == 2:
                 print 'Evaluating with num tuned = 2'
                 old_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/old_fc')
                 new_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/fully_connected')
                 shared_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/Conv')
-                print 'Shared params are', shared_params
-                names_to_vars = {}
-                for old_param, new_param in zip(old_task_params, new_task_params):
-                    names_to_vars[old_param.op.name] = new_param
+                # print 'Shared params are', shared_params
+                # names_to_vars = {}
+                # for old_param, new_param in zip(old_task_params, new_task_params):
+                #     names_to_vars[old_param.op.name] = new_param
             else:
                 print 'Evaluating with num tuned = 1'
                 old_task_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='new_q/old_fc_1/')
@@ -423,12 +445,27 @@ class DQN(QN):
             if self.config.noise:
                 state_shape = list(self.env.observation_space.shape)
                 img_height, img_width, nchannels = state_shape
-                noise = np.random.choice(np.arange(256, dtype=np.uint8), replace=True, size=[self.config.batch_size, \
+                if t > 0 and t % self.config.num_adv_iter == 0 and self.config.adv:
+                    print 'Adding adversarial noise'
+                    noise = self.noise_update + self.prev_noise
+                    noise_min = np.min(noise, axis=(1,2,3), keepdims=True)
+                    noise_zero - noise - noise_min
+                    noise_max = np.max(noise_zero, axis=(1,2,3), keepdims=True)
+                    noise_scaled = 255*(noise_zero/noise_max)
+                    noise = noise_scaled.astype(np.uint8)
+                else:
+                    noise = np.random.choice(np.arange(256, dtype=np.uint8), replace=True, size=[self.config.batch_size, \
                                 img_height, img_width, nchannels*self.config.state_history])
                 fd[self.n] = noise
+                self.prev_noise = noise
 
-        loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm, 
-                                                 self.merged, self.train_op], feed_dict=fd)
+        if self.config.adv:
+            loss_eval, grad_norm_eval, summary, self.noise_update, _ = self.sess.run([self.loss, \
+                                self.grad_norm, self.merged, self.noise_grad, self.train_op], feed_dict=fd)
+        else:
+           loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, \
+                                self.grad_norm, self.merged, self.train_op], feed_dict=fd)
+ 
 
 
         # tensorboard stuff
