@@ -446,10 +446,11 @@ class DQN(QN):
                 state_shape = list(self.env.observation_space.shape)
                 img_height, img_width, nchannels = state_shape
                 if t > 0 and t % self.config.num_adv_iter == 0 and self.config.adv:
-                    print 'Adding adversarial noise'
+		    self.noise_update = 255*self.noise_update/np.max(self.noise_update, axis=(1,2,3), keepdims=True)
+                    #print 'Adding adversarial noise', self.noise_update
                     noise = self.noise_update + self.prev_noise
                     noise_min = np.min(noise, axis=(1,2,3), keepdims=True)
-                    noise_zero - noise - noise_min
+                    noise_zero = noise - noise_min
                     noise_max = np.max(noise_zero, axis=(1,2,3), keepdims=True)
                     noise_scaled = 255*(noise_zero/noise_max)
                     noise = noise_scaled.astype(np.uint8)
@@ -460,10 +461,10 @@ class DQN(QN):
                 self.prev_noise = noise
 
         if self.config.adv:
-            loss_eval, grad_norm_eval, summary, self.noise_update, _ = self.sess.run([self.loss, \
+	    loss_eval, grad_norm_eval, summary, self.noise_update, _ = self.sess.run([self.loss, \
                                 self.grad_norm, self.merged, self.noise_grad, self.train_op], feed_dict=fd)
         else:
-           loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, \
+            loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, \
                                 self.grad_norm, self.merged, self.train_op], feed_dict=fd)
  
 

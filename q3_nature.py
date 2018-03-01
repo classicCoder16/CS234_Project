@@ -155,13 +155,13 @@ class NatureQN(Linear):
 			
 			# If we are using noise
 			if self.config.noise:
-
+				self.the_noise = noise
 				# Pass in the noise input through the previously defined common new graph operations
 				# Note the reuse flag
 				with tf.variable_scope('new_' + scope, reuse=True):
 
 					# Common operations for all splits
-					conv1_old = tf.contrib.layers.conv2d(noise, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
+					conv1_old = tf.contrib.layers.conv2d(self.the_noise, num_outputs=32, kernel_size=8, stride=4, padding='SAME')
 					conv2_old = tf.contrib.layers.conv2d(conv1_old, num_outputs=64, kernel_size=4, stride=2, padding='SAME')
 					
 					# These are common layers if we are using 2 or 1 unique layers

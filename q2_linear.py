@@ -256,6 +256,7 @@ class Linear(DQN):
 
             # Default to L2 loss
             else: 
+		print 'Here'
                 diff = (self.out_old - self.out_old_pred)
                 batch_losses = 0.5*tf.reduce_sum(diff**2, axis=1)
                 self.lwf_loss = tf.reduce_mean(batch_losses)
@@ -274,8 +275,9 @@ class Linear(DQN):
             self.loss = self.dqn_loss + self.config.lwf_weight*self.lwf_loss
 
             # Used for adversarial update
-            self.noise_grad = tf.gradients(self.lwf_loss, [self.n])[0]
-
+            print 'N is', self.n
+	    self.noise_grad = tf.gradients(self.lwf_loss, [self.the_noise])[0]
+	    self.noise_grad = tf.Print(self.noise_grad, [self.noise_grad])
 
         ##############################################################
         ######################## END YOUR CODE #######################
